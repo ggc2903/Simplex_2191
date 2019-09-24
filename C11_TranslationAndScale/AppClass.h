@@ -11,10 +11,13 @@ Date: 2017/05
 #include "imgui\ImGuiObject.h"
 
 #include "MyMesh.h"
+#include <vector>
 
 class Application
 {
 	MyMesh* m_pMesh = nullptr;
+	int meshListCount;
+	std::vector<MyMesh*> MeshList;
 	String m_sProgrammer = "Alberto Bobadilla - labigm@rit.edu";
 
 private:
