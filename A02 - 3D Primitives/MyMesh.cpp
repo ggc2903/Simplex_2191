@@ -276,8 +276,44 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	//GenerateCube(a_fRadius * 2.0f, a_v3Color);
 	// -------------------------------
+	std::vector<vector3> basePoints; //List holding vector3 positions of all base circle points
+	double triSize = 2 * PI / a_nSubdivisions; //Divides radius of circle up by number of subdivisions
+
+	vector3 baseFirstPoint = vector3(0, -a_fHeight / 2, 0); //Store first point of triangle to be the base
+	vector3 baseSecondPoint = vector3(a_fRadius, -a_fHeight / 2, 0); //Store second point of triangle
+	vector3 topPoint = vector3(0, a_fHeight / 2, 0);
+
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loopg goes through and created a triangle based on the number of subdivisions
+	{
+		//Get the angle of the subdivison
+		double angle = triSize * i;
+
+		//Calculate the x and Z values of the new thirdPoint
+		float baseNewX = a_fRadius * cos(angle);
+		float baseNewZ = a_fRadius * sin(angle);
+
+		//Use AddTri function to generate a triangle based on the generated thirdPoint
+		AddTri(baseFirstPoint, baseSecondPoint, vector3(baseNewX, -a_fHeight / 2, baseNewZ));
+		basePoints.push_back(baseSecondPoint);
+
+		//Set the secondPoint equal to the newly generated point, so the next triangle will be created from the correct location.
+		baseSecondPoint = vector3(baseNewX, -a_fHeight / 2, baseNewZ);
+	}
+
+	//Generate outer triangles that connect the topPoint to the basePoints
+	for (int i = 0; i <= a_nSubdivisions; i++)
+	{
+		if (i == a_nSubdivisions)
+		{
+			AddTri(topPoint, basePoints[0], basePoints[i]);
+		}
+		else
+		{
+			AddTri(topPoint, basePoints[i + 1], basePoints[i]);
+		}
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
@@ -300,8 +336,65 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	//GenerateCube(a_fRadius * 2.0f, a_v3Color);
 	// -------------------------------
+	std::vector<vector3> basePoints; //List holding vector3 positions of all base circle points
+	std::vector<vector3> topPoints; //List holding vector3 positions of all top circle points
+	double triSize = 2 * PI / a_nSubdivisions; //Divides radius of circle up by number of subdivisions
+
+
+	vector3 baseFirstPoint = vector3(0, -a_fHeight/2, 0); //Store first point of triangle to be the base
+	vector3 baseSecondPoint = vector3(a_fRadius, -a_fHeight/2, 0); //Store second point of triangle
+
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loopg goes through and created a triangle based on the number of subdivisions
+	{
+		//Get the angle of the subdivison
+		double angle = triSize * i;
+
+		//Calculate the x and Z values of the new thirdPoint
+		float baseNewX = a_fRadius * cos(angle);
+		float baseNewZ = a_fRadius * sin(angle);
+
+		//Use AddTri function to generate a triangle based on the generated thirdPoint
+		AddTri(baseFirstPoint, baseSecondPoint, vector3(baseNewX, -a_fHeight/2, baseNewZ));
+		basePoints.push_back(baseSecondPoint);
+
+		//Set the secondPoint equal to the newly generated point, so the next triangle will be created from the correct location.
+		baseSecondPoint = vector3(baseNewX, -a_fHeight/2, baseNewZ);
+	}
+
+	vector3 topFirstPoint = vector3(0, a_fHeight / 2, 0); //Store first point of triangle to be the base
+	vector3 topSecondPoint = vector3(a_fRadius, a_fHeight / 2, 0); //Store second point of triangle
+
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loopg goes through and created a triangle based on the number of subdivisions
+	{
+		//Get the angle of the subdivison
+		double angle = triSize * i;
+
+		//Calculate the x and Z values of the new thirdPoint
+		float topNewX = a_fRadius * cos(angle);
+		float topNewZ = a_fRadius * sin(angle);
+
+		//Use AddTri function to generate a triangle based on the generated thirdPoint
+		AddTri(vector3(topNewX, a_fHeight / 2, topNewZ), topSecondPoint, topFirstPoint);
+		topPoints.push_back(topSecondPoint);
+
+		//Set the secondPoint equal to the newly generated point, so the next triangle will be created from the correct location.
+		topSecondPoint = vector3(topNewX, a_fHeight / 2, topNewZ);
+	}
+
+	//Generate outer planes that connect topPoints to basePoints
+	for (int i = 0; i <= a_nSubdivisions; i++)
+	{
+		if (i == a_nSubdivisions)
+		{
+			AddQuad(topPoints[i], topPoints[0], basePoints[i], basePoints[0]);
+		} 
+		else 
+		{
+			AddQuad(topPoints[i], topPoints[i + 1], basePoints[i], basePoints[i + 1]);
+		}
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
@@ -330,8 +423,117 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
+	//GenerateCube(a_fOuterRadius * 2.0f, a_v3Color);
 	// -------------------------------
+	std::vector<vector3> outerBasePoints; //List holding vector3 positions of all outer base circle points
+	std::vector<vector3> outerTopPoints; //List holding vector3 positions of all outer top circle points
+
+	std::vector<vector3> innerBasePoints; //List holding vector3 positions of all inner base circle points
+	std::vector<vector3> innerTopPoints; //List holding vector3 positions of all inner top circle points
+
+	double triSize = 2 * PI / a_nSubdivisions; //Divides radius of circle up by number of subdivisions
+
+
+	vector3 baseFirstPoint = vector3(0, -a_fHeight / 2, 0); //Store first point of triangle to be the base
+	vector3 outerBaseSecondPoint = vector3(a_fOuterRadius, -a_fHeight / 2, 0); //Store second point of triangle for outer ring
+	vector3 innerBaseSecondPoint = vector3(a_fInnerRadius, -a_fHeight / 2, 0); //Store second point of triangle for inner ring
+
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loopg goes through and created a triangle based on the number of subdivisions
+	{
+		//Get the angle of the subdivison
+		double angle = triSize * i;
+
+		//Calculate the x and Z values of the new outer thirdPoint
+		float outerBaseNewX = a_fOuterRadius * cos(angle);
+		float outerBaseNewZ = a_fOuterRadius * sin(angle);
+
+		//Calculate the x and Z values of the new inner thirdPoint
+		float innerBaseNewX = a_fInnerRadius * cos(angle);
+		float innerBaseNewZ = a_fInnerRadius * sin(angle);
+
+		outerBasePoints.push_back(outerBaseSecondPoint);
+		innerBasePoints.push_back(innerBaseSecondPoint);
+
+		//Set the secondPoint equal to the newly generated point, so the next triangle will be created from the correct location.
+		outerBaseSecondPoint = vector3(outerBaseNewX, -a_fHeight / 2, outerBaseNewZ);
+		innerBaseSecondPoint = vector3(innerBaseNewX, -a_fHeight / 2, innerBaseNewZ);
+	}
+
+	vector3 topFirstPoint = vector3(0, a_fHeight / 2, 0); //Store first point of triangle to be the base
+	vector3 outerTopSecondPoint = vector3(a_fOuterRadius, a_fHeight / 2, 0); //Store second point of triangle
+	vector3 innerTopSecondPoint = vector3(a_fInnerRadius, a_fHeight / 2, 0); //Store second point of triangle
+
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loopg goes through and created a triangle based on the number of subdivisions
+	{
+		//Get the angle of the subdivison
+		double angle = triSize * i;
+
+		//Calculate the x and Z values of the new thirdPoint
+		float outerTopNewX = a_fOuterRadius * cos(angle);
+		float outerTopNewZ = a_fOuterRadius * sin(angle);
+
+		float innerTopNewX = a_fInnerRadius * cos(angle);
+		float innerTopNewZ = a_fInnerRadius * sin(angle);
+
+		outerTopPoints.push_back(outerTopSecondPoint);
+		innerTopPoints.push_back(innerTopSecondPoint);
+
+		//Set the secondPoint equal to the newly generated point, so the next triangle will be created from the correct location.
+		outerTopSecondPoint = vector3(outerTopNewX, a_fHeight / 2, outerTopNewZ);
+		innerTopSecondPoint = vector3(innerTopNewX, a_fHeight / 2, innerTopNewZ);
+	}
+
+	//Generate planes for top circle
+	for (int i = 0; i <= a_nSubdivisions; i++)
+	{
+		if (i == a_nSubdivisions)
+		{
+			AddQuad(innerTopPoints[i], innerTopPoints[0], outerTopPoints[i], outerTopPoints[0]);
+		}
+		else
+		{
+			AddQuad(innerTopPoints[i], innerTopPoints[i + 1], outerTopPoints[i], outerTopPoints[i + 1]);
+		}
+	}
+
+	//Generate planes for bottom circle
+	for (int i = 0; i <= a_nSubdivisions; i++)
+	{
+		if (i == a_nSubdivisions)
+		{
+			AddQuad(outerBasePoints[i], outerBasePoints[0], innerBasePoints[i], innerBasePoints[0]);
+		}
+		else
+		{
+			AddQuad(outerBasePoints[i], outerBasePoints[i + 1], innerBasePoints[i], innerBasePoints[i + 1]);
+		}
+	}
+
+	//Generate outer planes that connect outerTopPoints to outerBasePoints
+	for (int i = 0; i <= a_nSubdivisions; i++)
+	{
+		if (i == a_nSubdivisions)
+		{
+			AddQuad(outerTopPoints[i], outerTopPoints[0], outerBasePoints[i], outerBasePoints[0]);
+		}
+		else
+		{
+			AddQuad(outerTopPoints[i], outerTopPoints[i + 1], outerBasePoints[i], outerBasePoints[i + 1]);
+		}
+	}
+
+	//Generate inner planes that connect innerTopPoints to innerBasePoints
+	for (int i = 0; i <= a_nSubdivisions; i++)
+	{
+		if (i == a_nSubdivisions)
+		{
+			AddQuad(outerTopPoints[0], outerTopPoints[i], outerBasePoints[0], outerBasePoints[i]);
+		}
+		else
+		{
+			AddQuad(outerTopPoints[i + 1], outerTopPoints[i], outerBasePoints[i + 1], outerBasePoints[i]);
+		}
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
