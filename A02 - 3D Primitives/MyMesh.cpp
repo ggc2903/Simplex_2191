@@ -285,7 +285,7 @@ void MyMesh::GenerateCone(float a_fRadius, float a_fHeight, int a_nSubdivisions,
 	vector3 baseSecondPoint = vector3(a_fRadius, -a_fHeight / 2, 0); //Store second point of triangle
 	vector3 topPoint = vector3(0, a_fHeight / 2, 0);
 
-	for (int i = 0; i <= a_nSubdivisions; i++) //Loopg goes through and created a triangle based on the number of subdivisions
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loop goes through and created a circle based on the number of subdivisions
 	{
 		//Get the angle of the subdivison
 		double angle = triSize * i;
@@ -346,7 +346,7 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	vector3 baseFirstPoint = vector3(0, -a_fHeight/2, 0); //Store first point of triangle to be the base
 	vector3 baseSecondPoint = vector3(a_fRadius, -a_fHeight/2, 0); //Store second point of triangle
 
-	for (int i = 0; i <= a_nSubdivisions; i++) //Loopg goes through and created a triangle based on the number of subdivisions
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loop goes through and created a circle based on the number of subdivisions
 	{
 		//Get the angle of the subdivison
 		double angle = triSize * i;
@@ -366,7 +366,7 @@ void MyMesh::GenerateCylinder(float a_fRadius, float a_fHeight, int a_nSubdivisi
 	vector3 topFirstPoint = vector3(0, a_fHeight / 2, 0); //Store first point of triangle to be the base
 	vector3 topSecondPoint = vector3(a_fRadius, a_fHeight / 2, 0); //Store second point of triangle
 
-	for (int i = 0; i <= a_nSubdivisions; i++) //Loopg goes through and created a triangle based on the number of subdivisions
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loop goes through and created a circle based on the number of subdivisions
 	{
 		//Get the angle of the subdivison
 		double angle = triSize * i;
@@ -438,7 +438,7 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	vector3 outerBaseSecondPoint = vector3(a_fOuterRadius, -a_fHeight / 2, 0); //Store second point of triangle for outer ring
 	vector3 innerBaseSecondPoint = vector3(a_fInnerRadius, -a_fHeight / 2, 0); //Store second point of triangle for inner ring
 
-	for (int i = 0; i <= a_nSubdivisions; i++) //Loopg goes through and created a triangle based on the number of subdivisions
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loop goes through and created a ring based on the number of subdivisions
 	{
 		//Get the angle of the subdivison
 		double angle = triSize * i;
@@ -463,7 +463,7 @@ void MyMesh::GenerateTube(float a_fOuterRadius, float a_fInnerRadius, float a_fH
 	vector3 outerTopSecondPoint = vector3(a_fOuterRadius, a_fHeight / 2, 0); //Store second point of triangle
 	vector3 innerTopSecondPoint = vector3(a_fInnerRadius, a_fHeight / 2, 0); //Store second point of triangle
 
-	for (int i = 0; i <= a_nSubdivisions; i++) //Loopg goes through and created a triangle based on the number of subdivisions
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loop goes through and created a ring based on the number of subdivisions
 	{
 		//Get the angle of the subdivison
 		double angle = triSize * i;
@@ -589,8 +589,103 @@ void MyMesh::GenerateSphere(float a_fRadius, int a_nSubdivisions, vector3 a_v3Co
 	Init();
 
 	// Replace this with your code
-	GenerateCube(a_fRadius * 2.0f, a_v3Color);
+	/*Sphere not working, suspected reasoning:
+		The issue I realize with my sphere not working is the face that i'm trying to create several rings of points and connecting them upward and downward while decreasing the radius
+		of those additional rings in an exponential manner. The problem with this being that it's not actually making the shape rounder by any means, but just making it smaller till it 
+		comes to a point, as there aren't enough subdivisions vertically or horizontally to make this work properly in a procedural way. Hardcoding more horizontal rings will smooth the
+		shape out, but it won't fix the procedural issue of having too few vertical subdivisions.
+	*/
 	// -------------------------------
+	std::vector<vector3> centerRing; //List holding vector3 positions of center section
+	std::vector<vector3> upperHalfRing; //List holding vector3 positions of upper half section
+	std::vector<vector3> upperQuarterRing; //List holding vector3 positions of upper quater section
+	std::vector<vector3> lowerHalfRing; //List holding vector3 positions of lower half section
+	std::vector<vector3> lowerQuarterRing; //List holding vector3 positions of lower quater section
+
+	double triSize = 2 * PI / a_nSubdivisions; //Divides radius of circle up by number of subdivisions
+
+	vector3 topPoint = vector3(0, a_fRadius, 0); //Very top point of sphere
+	vector3 bottomPoint = vector3(0, -a_fRadius, 0); //Very bottom point of sphere
+
+	vector3 baseFirstPoint = vector3(0, -a_fRadius / 2, 0); //Store first point of triangle to be the base
+	vector3 centerSecondPoint = vector3(a_fRadius, 0, 0); //Store second point of triangle for center ring
+	vector3 upperHalfSecondPoint = vector3((a_fRadius / 2) + a_fRadius / 4, a_fRadius / 2, 0); //Store second point of triangle for upper half ring
+	vector3 upperQuarterSecondPoint = vector3(a_fRadius / 2, a_fRadius / 2 + a_fRadius / 4, 0); //Store second point of triangle for upper quater ring
+	vector3 lowerHalfSecondPoint = vector3((a_fRadius / 2) + a_fRadius / 4, -a_fRadius / 2, 0); //Store second point of triangle for lower half ring
+	vector3 lowerQuarterSecondPoint = vector3(a_fRadius / 2, -a_fRadius / 2 + -a_fRadius / 4, 0); //Store second point of triangle for lower quater ring
+
+	for (int i = 0; i <= a_nSubdivisions; i++) //Loop goes through and created a ring based on the number of subdivisions
+	{
+		//Get the angle of the subdivison
+		double angle = triSize * i;
+
+		//Calculate the x and Z values of the new center thirdPoint
+		float centerNewX = a_fRadius * cos(angle);
+		float centerNewZ = a_fRadius * sin(angle);
+
+		//Calculate the x and Z values of the new upper half thirdPoint
+		float upperHalfNewX = ((a_fRadius / 2) + (a_fRadius / 4)) * cos(angle);
+		float upperHalfNewZ = ((a_fRadius / 2) + (a_fRadius / 4)) * sin(angle);
+
+		//Calculate the x and Z values of the new upper quarter thirdPoint
+		float upperQuarterNewX = a_fRadius / 2 * cos(angle);
+		float upperQuarterNewZ = a_fRadius / 2 * sin(angle);
+
+		//Calculate the x and Z values of the new lower half thirdPoint
+		float lowerHalfNewX = ((a_fRadius / 2) + (a_fRadius / 4)) * cos(angle);
+		float lowerHalfNewZ = ((a_fRadius / 2)  + (a_fRadius / 4)) * sin(angle);
+
+		//Calculate the x and Z values of the new lower quarter thirdPoint
+		float lowerQuarterNewX = a_fRadius / 2 * cos(angle);
+		float lowerQuarterNewZ = a_fRadius / 2 * sin(angle);
+
+		centerRing.push_back(centerSecondPoint);
+		upperHalfRing.push_back(upperHalfSecondPoint);
+		upperQuarterRing.push_back(upperQuarterSecondPoint);
+		lowerHalfRing.push_back(lowerHalfSecondPoint);
+		lowerQuarterRing.push_back(lowerQuarterSecondPoint);
+
+		//Set the secondPoint equal to the newly generated point, so the next triangle will be created from the correct location.
+		centerSecondPoint = vector3(centerNewX, 0, centerNewZ);
+		upperHalfSecondPoint = vector3(upperHalfNewX, a_fRadius / 2, upperHalfNewZ);
+		upperQuarterSecondPoint = vector3(upperQuarterNewX, a_fRadius / 2 + a_fRadius / 4, upperQuarterNewZ);
+		lowerHalfSecondPoint = vector3(lowerHalfNewX, -a_fRadius / 2, lowerHalfNewZ);
+		lowerQuarterSecondPoint = vector3(lowerQuarterNewX, -a_fRadius / 2 + -a_fRadius / 4, lowerQuarterNewZ);
+	}
+
+	//Generate visible quad planes
+	for (int i = 0; i <= a_nSubdivisions; i++)
+	{
+		if (i == a_nSubdivisions)
+		{
+			AddQuad(centerRing[0], centerRing[i], upperHalfRing[0], upperHalfRing[i]);
+			AddQuad(upperHalfRing[0], upperHalfRing[i], upperQuarterRing[0], upperQuarterRing[i]);
+			AddQuad(lowerHalfRing[0], lowerHalfRing[i], centerRing[0], centerRing[i]);
+			AddQuad(lowerQuarterRing[0], lowerQuarterRing[i], lowerHalfRing[0], lowerHalfRing[i]);
+		}
+		else
+		{
+			AddQuad(centerRing[i + 1], centerRing[i], upperHalfRing[i + 1], upperHalfRing[i]);
+			AddQuad(upperHalfRing[i + 1], upperHalfRing[i], upperQuarterRing[i + 1], upperQuarterRing[i]);
+			AddQuad(lowerHalfRing[i + 1], lowerHalfRing[i], centerRing[i + 1], centerRing[i]);
+			AddQuad(lowerQuarterRing[i + 1], lowerQuarterRing[i], lowerHalfRing[i + 1], lowerHalfRing[i]);
+		}
+	}
+
+	//Generate visible triangle planes
+	for (int i = 0; i <= a_nSubdivisions; i++)
+	{
+		if (i == a_nSubdivisions)
+		{
+			AddTri(topPoint, upperQuarterRing[0], upperQuarterRing[i]);
+			AddTri(lowerQuarterRing[i], lowerQuarterRing[0], bottomPoint);
+		}
+		else
+		{
+			AddTri(topPoint, upperQuarterRing[i + 1], upperQuarterRing[i]);
+			AddTri(lowerQuarterRing[i], lowerQuarterRing[i + 1], bottomPoint);
+		}
+	}
 
 	// Adding information about color
 	CompleteMesh(a_v3Color);
