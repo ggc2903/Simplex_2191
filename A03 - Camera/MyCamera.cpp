@@ -17,6 +17,8 @@ void Simplex::MyCamera::SetVerticalPlanes(vector2 a_v2Vertical) { m_v2Vertical =
 matrix4 Simplex::MyCamera::GetProjectionMatrix(void) { return m_m4Projection; }
 matrix4 Simplex::MyCamera::GetViewMatrix(void) { CalculateViewMatrix(); return m_m4View; }
 
+float fAngleX;
+
 Simplex::MyCamera::MyCamera()
 {
 	Init(); //Init the object with default values
@@ -116,6 +118,7 @@ void Simplex::MyCamera::ResetCamera(void)
 
 	CalculateProjectionMatrix();
 	CalculateViewMatrix();
+
 }
 
 void Simplex::MyCamera::SetPositionTargetAndUpward(vector3 a_v3Position, vector3 a_v3Target, vector3 a_v3Upward)
@@ -131,8 +134,11 @@ void Simplex::MyCamera::SetPositionTargetAndUpward(vector3 a_v3Position, vector3
 
 void Simplex::MyCamera::CalculateViewMatrix(void)
 {
-	//Calculate the look at most of your assignment will be reflected in this method
-	m_m4View = glm::lookAt(m_v3Position, m_v3Target, glm::normalize(m_v3Above - m_v3Position)); //position, target, upward
+	//Calculate center of world based on camera position
+	center = m_v3Position + glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(0.0f, 0.0f, -1.0f);
+
+	//Calculate the look at
+	m_m4View = glm::lookAt(m_v3Position, center, glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(0.0f, 1.0f, 0.0f));
 }
 
 void Simplex::MyCamera::CalculateProjectionMatrix(void)
@@ -152,11 +158,77 @@ void Simplex::MyCamera::CalculateProjectionMatrix(void)
 
 void MyCamera::MoveForward(float a_fDistance)
 {
-	//The following is just an example and does not take in account the forward vector (AKA view vector)
-	m_v3Position += vector3(0.0f, 0.0f,-a_fDistance);
-	m_v3Target += vector3(0.0f, 0.0f, -a_fDistance);
-	m_v3Above += vector3(0.0f, 0.0f, -a_fDistance);
+	//Calculate forward/backward movement of camera in it's space
+	m_v3Position += glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(0.0f, 0.0f, -a_fDistance);
+	m_v3Target += glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(0.0f, 0.0f, -a_fDistance);
+	m_v3Above += glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(0.0f, 0.0f, -a_fDistance);
+
+	//m_v3Position += GetForwardVector() * a_fDistance;
+	//m_v3Target += GetForwardVector() * a_fDistance;
+	//m_v3Above += GetForwardVector() * a_fDistance;
 }
 
-void MyCamera::MoveVertical(float a_fDistance){}//Needs to be defined
-void MyCamera::MoveSideways(float a_fDistance){}//Needs to be defined
+void MyCamera::MoveVertical(float a_fDistance)
+{
+	//Calculate vertical movement of camera in it's space
+	
+	m_v3Position += glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(0.0f, -a_fDistance, 0.0f);
+	m_v3Target += glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(0.0f, -a_fDistance, 0.0f);
+	m_v3Above += glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(0.0f, -a_fDistance, 0.0f);
+
+	/*
+	vector3 up = GetUpVector();
+	
+	m_v3Position += up * a_fDistance;
+	m_v3Target += up * a_fDistance;
+	m_v3Above += up * a_fDistance;
+	*/
+
+}
+void MyCamera::MoveSideways(float a_fDistance)
+{
+	//Calculate left/right movement of camera in it's space
+	m_v3Position += glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(a_fDistance, 0.0f, 0.0f);
+	m_v3Target += glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(a_fDistance, 0.0f, 0.0f);
+	m_v3Above += glm::mat3(glm::yawPitchRoll(rotate.y, rotate.x, rotate.z)) * vector3(a_fDistance, 0.0f, 0.0f);
+
+	/*
+	vector3 right = GetRightVector();
+
+	m_v3Position += right * a_fDistance;
+	m_v3Target += right * a_fDistance;
+	m_v3Above += right * a_fDistance;
+	*/
+}
+
+vector3 MyCamera::GetForwardVector()
+{
+	//Calculates the Forward vector and returns it
+	vector3 forward = glm::normalize(m_v3Target - m_v3Position);
+	return forward;
+}
+
+vector3 MyCamera::GetRightVector()
+{
+	//Calculates the Right vector and returns it
+	vector3 right = glm::cross(glm::normalize(GetForwardVector()), AXIS_Y);
+	return right;
+}
+
+vector3 MyCamera::GetUpVector()
+{
+	//Calculates the Up vector and returns it
+	vector3 up = glm::cross(glm::normalize(GetForwardVector()), glm::normalize(GetRightVector()));
+	return up;
+}
+
+void MyCamera::GetRotationAngles(float angleX, float angleY)
+{
+	//Store parameters into rotation vector3
+	rotate.x += angleX;
+	rotate.y += angleY;
+
+	//Clamp for X & Y so you don't spin endlessly in one direction
+	rotate.x = glm::clamp(rotate.x, -5.0f, 5.0f);
+	rotate.y = glm::clamp(rotate.y, -5.0f, 5.0f);
+}

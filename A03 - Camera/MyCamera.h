@@ -16,6 +16,9 @@ class MyCamera
 	vector3 m_v3Target = vector3(0.0f, 0.0f, 0.0f); //What I'm looking at
 	vector3 m_v3Above = vector3(0.0f, 1.0f, 0.0f); //What is above the camera
 
+	vector3 rotate = vector3(0.0f); //Vector3 to keep track of camera rotation
+	vector3 center = vector3(0.0f); //Vector3 to keep track of center of world in relation to camera
+
 	bool m_bPerspective = true; //perspective view? False is Orthographic
 
 	float m_fFOV = 45.0f; //Field of View
@@ -230,6 +233,33 @@ public:
 	OUTPUT: ---
 	*/
 	void MoveSideways(float a_fDistance = 0.1f);
+	/*
+	USAGE: Calculates the forward vector of the camera
+	ARGUMENTS: ---
+	OUTPUT: returns a vector3 that is the forward vector
+	*/
+	vector3 GetForwardVector();
+	/*
+	USAGE: Calculates the right vector of the camera
+	ARGUMENTS: ---
+	OUTPUT: returns a vector3 that is the right vector
+	*/
+	vector3 GetRightVector();
+	/*
+	USAGE: Calculates the up vector of the camera
+	ARGUMENTS: ---
+	OUTPUT: returns a vector3 that is the up vector
+	*/
+	vector3 GetUpVector();
+	/*
+	USAGE: Get's the X and Y angles of the camera's rotation from AppClassControls.cpp, and adds them to the rotation vector
+	ARGUMENTS: 
+	-	float angleX -> fAngleX from CameraRotation() in AppClassControls.cpp
+	-	float angleY -> fAngleY from CameraRotation() in AppClassControls.cpp
+	OUTPUT: ---
+	*/
+	void GetRotationAngles(float angleX, float angleY);
+
 };
 
 } //namespace Simplex
